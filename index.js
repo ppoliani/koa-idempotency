@@ -1,13 +1,22 @@
 const {createKey} = require('./lib/utils');
 const {getStoreProvider} = require('./lib/storeProviders');
 
+const storeResponse = (idempotencyKey, store, ctx) => {
+  const {path} = ctx.request;
+  const {status, body, headers} = ctx.response;
+  const response = {status, body, headers};
+
+  store.set(createKey(path, body, idempotencyKey));
+}
+
 const checkStore = async (storeOptions, idempotencyKey, ctx, next) => {
   const {path, body} = ctx.request;
   const store = getStoreProvider(storeOptions);
   const cachedResponse = store.get(createKey(path, body, idempotencyKey));
 
   if(!cachedResponse) {
-    return await next();
+    await next();
+    storeResponse(idempotencyKey, store, ctx);
   }
 
   const {statusCode, body, headers} = cachedResponse;
