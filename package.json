@@ -26,7 +26,6 @@
   "homepage": "https://github.com/ppoliani/koa-idempotency#readme",
   "devDependencies": {},
   "dependencies": {
-    "debug": "^4.1.1",
     "koa": "^2.12.0",
     "lru-cache": "^5.1.1"
   }
