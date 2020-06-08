@@ -1,0 +1,33 @@
+{
+  "name": "@ppoliani/koa-idempotency",
+  "version": "1.0.0",
+  "description": "koa middleware to make requests idempotent",
+  "main": "index.js",
+  "engines": {
+    "node": ">=10.19.0"
+  },
+  "scripts": {
+    "test": "mocha --reporter spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ppoliani/koa-idempotency"
+  },
+  "keywords": [
+    "koajs",
+    "idempotent",
+    "idempotency"
+  ],
+  "author": "Pavlos Polianidis",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ppoliani/koa-idempotency/issues"
+  },
+  "homepage": "https://github.com/ppoliani/koa-idempotency#readme",
+  "devDependencies": {},
+  "dependencies": {
+    "debug": "^4.1.1",
+    "koa": "^2.12.0",
+    "lru-cache": "^5.1.1"
+  }
+}
