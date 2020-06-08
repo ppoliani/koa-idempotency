@@ -1,12 +1,14 @@
 const {createKey} = require('./lib/utils');
 const {getStoreProvider} = require('./lib/storeProviders');
 
+const HEADER_NAME = 'Idempotency-Key';
+
 const storeResponse = (idempotencyKey, store, ctx) => {
-  const {path} = ctx.request;
+  const {path, body: reqBody} = ctx.request;
   const {status, body, header} = ctx.response;
   const response = {status, body, header};
 
-  store.set(createKey(path, body, idempotencyKey), response);
+  store.set(createKey(path, reqBody, idempotencyKey), response);
 }
 
 const checkStoreRoot = (getStoreProvider, createKey) => async (storeOptions, idempotencyKey, ctx, next) => {
@@ -28,7 +30,9 @@ const checkStoreRoot = (getStoreProvider, createKey) => async (storeOptions, ide
 
 const idempotenceRoot = checkStore => (opts={}) => async (ctx, next) => {
   const {storeOptions} = opts;
-  const idempotencyKey = ctx.request.header['Idempotency-Key'];
+  const idempotencyKey = ctx.request.header[HEADER_NAME]
+    ? ctx.request.header[HEADER_NAME] 
+    : ctx.request.header[HEADER_NAME.toLocaleLowerCase()];
   
   if(!idempotencyKey) {
     return await next();
