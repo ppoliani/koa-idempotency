@@ -22,8 +22,8 @@ const checkStoreRoot = (getStoreProvider, createKey) => async (storeOptions, ide
   const {statusCode, body: resBody, headers} = cachedResponse;
   ctx.status = statusCode;
   ctx.body = resBody;
-  res.set(headers);
-  res.set('X-Cache', 'HIT');
+  ctx.set(headers);
+  ctx.set('X-Cache', 'HIT');
 }
 
 const idempotenceRoot = checkStore => (opts={}) => async (ctx, next) => {
@@ -34,7 +34,7 @@ const idempotenceRoot = checkStore => (opts={}) => async (ctx, next) => {
     return await next();
   }
 
-  await checkStore(storeOptions, idempotencyKey, ctx);
+  await checkStore(storeOptions, idempotencyKey, ctx, next);
 }
 
 const checkStore = checkStoreRoot(getStoreProvider, createKey);

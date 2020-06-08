@@ -17,8 +17,14 @@ test('it should move to the next middleware if no Idempotency-Key exist', async 
 
 test('it should execute the request and store the response if there is no response for the given Idempotency-Key stored in the store', async t => {
   const store = getStoreProvider();
-  const idempotencyKey = 12345;
+  const idempotencyKey = '12345';
   const nextSpy = sinon.spy();
+  const response =  {
+    headers: {headerKey: 'headerVal'},
+    status: 201,
+    body: {prop: 'prop2'}
+  }
+
   const ctx = {
     request: {
       path: '/pay',
@@ -27,13 +33,10 @@ test('it should execute the request and store the response if there is no respon
         'Idempotency-Key': idempotencyKey
       }
     },
-    response: {
-      path: '/pay',
-      body: {prop: 'prop2'}
-    }
+    response
   }
 
   await idempotence()(ctx, nextSpy);
 
-  t.deepEqual(store.get(createKey(ctx.response.path, ctx.response.body, idempotencyKey)), {});
+  t.deepEqual(store.get(createKey(ctx.request.path, ctx.response.body, idempotencyKey)), response);
 });
