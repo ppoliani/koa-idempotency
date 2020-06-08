@@ -20,7 +20,7 @@ test('it should execute the request and store the response if there is no respon
   const idempotencyKey = '12345';
   const nextSpy = sinon.spy();
   const response =  {
-    headers: {headerKey: 'headerVal'},
+    header: {headerKey: 'headerVal'},
     status: 201,
     body: {prop: 'prop2'}
   }
@@ -45,15 +45,15 @@ test('it should return the cached version corresponding to the given Idempotency
   const idempotencyKey = '12345';
   const nextSpy = sinon.spy();
   const response =  {
-    headers: {headerKey: 'headerVal'},
+    header: {headerKey: 'headerVal'},
     status: 201,
-    body: {prop: 'prop2'}
+    body: {prop: 'prop1'}
   }
 
   const ctx = {
-    set: (key, val) => function() {
+    set(key, val) {
       if(typeof key === 'object') {
-        this.response.header = val;
+        this.response.header = key;
       }
       else {
         this.response.header[key] = val;
@@ -73,6 +73,6 @@ test('it should return the cached version corresponding to the given Idempotency
   await idempotence()(ctx, nextSpy);
 
   t.deepEqual(ctx.status, response.status);
-  t.deepEqual(ctx.response.header, {...response.headers, 'X-Cache': 'HIT'});
+  t.deepEqual(ctx.response.header, {...response.header, 'X-Cache': 'HIT'});
   t.deepEqual(ctx.body, response.body);
 });
