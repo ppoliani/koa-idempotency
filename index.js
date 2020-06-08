@@ -6,17 +6,17 @@ const storeResponse = (idempotencyKey, store, ctx) => {
   const {status, body, headers} = ctx.response;
   const response = {status, body, headers};
 
-  store.set(createKey(path, body, idempotencyKey));
+  store.set(createKey(path, body, idempotencyKey), response);
 }
 
-const checkStore = async (storeOptions, idempotencyKey, ctx, next) => {
+const checkStoreRoot = (getStoreProvider, createKey) => async (storeOptions, idempotencyKey, ctx, next) => {
   const {path, body: reqBody} = ctx.request;
   const store = getStoreProvider(storeOptions);
   const cachedResponse = store.get(createKey(path, reqBody, idempotencyKey));
 
   if(!cachedResponse) {
     await next();
-    storeResponse(idempotencyKey, store, ctx);
+    return storeResponse(idempotencyKey, store, ctx);
   }
 
   const {statusCode, body: resBody, headers} = cachedResponse;
@@ -26,7 +26,7 @@ const checkStore = async (storeOptions, idempotencyKey, ctx, next) => {
   res.set('X-Cache', 'HIT');
 }
 
-const idempotence = (opts={}) => async (ctx, next) => {
+const idempotenceRoot = checkStore => (opts={}) => async (ctx, next) => {
   const {storeOptions} = opts;
   const idempotencyKey = ctx.request.header['Idempotency-Key'];
   
@@ -35,9 +35,13 @@ const idempotence = (opts={}) => async (ctx, next) => {
   }
 
   await checkStore(storeOptions, idempotencyKey, ctx);
-
-
 }
 
+const checkStore = checkStoreRoot(getStoreProvider, createKey);
+const idempotence = idempotenceRoot(checkStore);
 
-module.exports = idempotence;
+module.exports = {
+  idempotenceRoot,
+  checkStoreRoot,
+  idempotence,
+};
