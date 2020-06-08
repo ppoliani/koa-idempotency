@@ -8,7 +8,7 @@ const idempotence = opts => async (ctx, next) => {
     return await next();
   }
 
-
+  const store = getStoreProvider(opts.store);
 }
 
 
