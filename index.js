@@ -1,4 +1,5 @@
 const {createKey} = require('./lib/utils');
+const {getLock} = require('./lib/mutex');
 const {getStoreProvider} = require('./lib/storeProviders');
 
 const HEADER_NAME = 'Idempotency-Key';
@@ -29,16 +30,29 @@ const checkStoreRoot = (getStoreProvider, createKey) => async (storeOptions, ide
 }
 
 const idempotenceRoot = checkStore => (opts={}) => async (ctx, next) => {
-  const {storeOptions} = opts;
-  const idempotencyKey = ctx.request.header[HEADER_NAME]
-    ? ctx.request.header[HEADER_NAME] 
-    : ctx.request.header[HEADER_NAME.toLocaleLowerCase()];
-  
-  if(!idempotencyKey) {
-    return await next();
-  }
+  let releaseLock;
 
-  await checkStore(storeOptions, idempotencyKey, ctx, next);
+  try {
+    const {storeOptions} = opts;
+    const idempotencyKey = ctx.request.header[HEADER_NAME]
+      ? ctx.request.header[HEADER_NAME] 
+      : ctx.request.header[HEADER_NAME.toLocaleLowerCase()];
+    
+    if(!idempotencyKey) {
+      return await next();
+    }
+
+    releaseLock = await getLock(idempotencyKey);
+    await checkStore(storeOptions, idempotencyKey, ctx, next);
+  }
+  catch(error) {
+    throw error;
+  }
+  finally {
+    if(releaseLock) {
+      releaseLock();
+    }
+  }
 }
 
 const checkStore = checkStoreRoot(getStoreProvider, createKey);

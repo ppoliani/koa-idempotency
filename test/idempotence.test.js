@@ -76,3 +76,54 @@ test.serial('it should return the cached version corresponding to the given Idem
   t.deepEqual(ctx.response.header, {...response.header, 'X-Cache': 'HIT'});
   t.deepEqual(ctx.body, response.body);
 });
+
+test.serial('it should handle multiple concurrent requests with the same Idempotency-Key', async t => {
+  const idempotencyKey = '123456';
+  const nextSpy = sinon.spy();
+  const response =  {
+    header: {headerKey: 'headerVal'},
+    status: 201,
+    body: {propA: 'propVal'}
+  }
+
+  const set = function(key, val) {
+    if(typeof key === 'object') {
+      this.response.header = key;
+    }
+    else {
+      this.response.header[key] = val;
+    }
+  };
+
+  const ctx = {
+    set,
+    request: {
+      path: '/pay',
+      body: {prop: 'prop1'},
+      header: {
+        'Idempotency-Key': idempotencyKey
+      }
+    },
+    response
+  }
+
+  const ctx2 = {
+    set,
+    request: {
+      path: '/pay',
+      body: {prop: 'prop1'},
+      header: {
+        'Idempotency-Key': idempotencyKey
+      }
+    },
+    response
+  }
+
+  // do not await so we emulate concurrent calls
+  idempotence()(ctx, nextSpy);
+  await idempotence()(ctx2, nextSpy);
+
+  t.deepEqual(ctx2.status, response.status);
+  t.deepEqual(ctx2.response.header, {...response.header, 'X-Cache': 'HIT'});
+  t.deepEqual(ctx2.body, response.body);
+});
