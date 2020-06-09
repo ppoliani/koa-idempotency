@@ -4,22 +4,22 @@ const {getStoreProvider} = require('./lib/storeProviders');
 
 const HEADER_NAME = 'Idempotency-Key';
 
-const storeResponse = (idempotencyKey, store, ctx) => {
+const storeResponse = async (idempotencyKey, store, ctx) => {
   const {path, body: reqBody} = ctx.request;
   const {status, body, header} = ctx.response;
   const response = {status, body, header};
 
-  store.set(createKey(path, reqBody, idempotencyKey), response);
+  await store.set(createKey(path, reqBody, idempotencyKey), response);
 }
 
 const checkStoreRoot = (getStoreProvider, createKey) => async (storeOptions, idempotencyKey, ctx, next) => {
   const {path, body: reqBody} = ctx.request;
   const store = getStoreProvider(storeOptions);
-  const cachedResponse = store.get(createKey(path, reqBody, idempotencyKey));
+  const cachedResponse = await store.get(createKey(path, reqBody, idempotencyKey));
 
   if(!cachedResponse) {
     await next();
-    return storeResponse(idempotencyKey, store, ctx);
+    return await storeResponse(idempotencyKey, store, ctx);
   }
 
   const {status, body: resBody, header} = cachedResponse;

@@ -38,7 +38,8 @@ test.serial('it should execute the request and store the response if there is no
 
   await idempotence()(ctx, nextSpy);
 
-  t.deepEqual(store.get(createKey(ctx.request.path, ctx.request.body, idempotencyKey)), response);
+  const expected = await store.get(createKey(ctx.request.path, ctx.request.body, idempotencyKey));
+  t.deepEqual(expected, response);
 });
 
 test.serial('it should return the cached version corresponding to the given Idempotency-Key', async t => {
